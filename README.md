@@ -1,8 +1,7 @@
 # BurpScan
 A powerful utility to automate unauthenticated web application security testing with Burp Suite by handling various input formats, intelligently discovering endpoints, and creating properly scoped scans.
 
-![Example](images/example.png)
-
+![Example](images/burpscan.png)
 
 # Overview
 BurpScan bridges the gap between reconnaissance tools and Burp Suite Professional, making unauthenticated web application security testing more efficient. It intelligently processes various input formats, verifies live services, optionally discovers endpoints with katana, and creates properly scoped Burp Suite active scans.
@@ -15,6 +14,8 @@ BurpScan bridges the gap between reconnaissance tools and Burp Suite Professiona
 - Security-Focused: Maintains tight scope control to prevent scanner sprawl
 - Error Handling: Saves discovered URLs to files if API calls fail, allowing later retry
 - Interactive Mode: Allows selective scanning of discovered targets
+- Immediate Processing: Tasks are processed immediately after confirmation
+- Visual Appeal: Includes a colorful ASCII banner for a professional look
 
 # Prerequisites
 - Python 3.6+
@@ -91,7 +92,8 @@ cat targets.txt | python3 burpscan.py
 - Input Processing: Parses and normalizes input from various formats
 - Service Verification: Uses httpx to verify live HTTP/HTTPS services
 - URL Classification: Separates simple endpoints from complex URLs
-- Optional Crawling: If --katana is enabled, runs katana crawler on simple endpoints
+- Optional Crawling: If --katana is enabled, automatically runs katana crawler on simple endpoints
+- Immediate Processing: Each task is processed right after user confirmation
 - Subdomain Grouping: Groups URLs by subdomain for separate scans
 - Scope Configuration: Creates proper scope for each subdomain to prevent scanner sprawl
 - Active Scanning: Sends requests to Burp Suite API to initiate properly scoped active scans
@@ -120,7 +122,6 @@ Bug Bounty Hunting
 ```
 python3 burpscan.py subdomains.txt --katana
 ```
-
 # Troubleshooting
 
 1. httpx not found: Ensure you've installed ProjectDiscovery's httpx, not the Python package:
@@ -129,11 +130,23 @@ sudo apt purge python3-httpx -y # Remove the kali pre-installed httpx
 ```
 2. API connection errors: Verify Burp Suite is running and the REST API is enabled
 3. katana errors: Verify katana is installed and in your PATH
+4. Display issues: If the ASCII banner doesn't display correctly, ensure your terminal supports ANSI color codes
+3. katana errors: Verify katana is installed and in your PATH
 
 # Credits
 [ProjectDiscovery](https://projectdiscovery.io/) for their excellent httpx and katana tools
 
 [PortSwigger](https://portswigger.net/) for Burp Suite and their REST API
 
+# Changelog
 
+## v1.0.0
+- Initial release
+
+## v1.1.0
+- Added immediate processing of tasks after user confirmation
+- Removed confirmation prompt before running katana when --katana flag is provided
+- Added colorful ASCII banner for a more professional look
+
+Note: This tool is intended for legal security testing with proper authorization. Always ensure you have permission to scan the targeted systems.
 Note: This tool is intended for legal security testing with proper authorization. Always ensure you have permission to scan the targeted systems.
