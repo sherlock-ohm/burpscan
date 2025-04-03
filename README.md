@@ -15,7 +15,6 @@ BurpScan bridges the gap between reconnaissance tools and Burp Suite Professiona
 - Error Handling: Saves discovered URLs to files if API calls fail, allowing later retry
 - Interactive Mode: Allows selective scanning of discovered targets
 - Immediate Processing: Tasks are processed immediately after confirmation
-- Visual Appeal: Includes a colorful ASCII banner for a professional look
 
 # Prerequisites
 - Python 3.6+
