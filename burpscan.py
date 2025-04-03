@@ -11,6 +11,44 @@ import os
 import json
 from urllib.parse import urlparse, quote
 from datetime import datetime
+import random
+
+# ----------------------------
+# ASCII Banner
+# ----------------------------
+
+def display_banner():
+    """Display a fancy ASCII art banner for BurpScan"""
+    banner = """
+ ▄▄▄▄    █    ██  ██▀███   ██▓███    ██████  ▄████▄   ▄▄▄       ███▄    █
+▓█████▄  ██  ▓██▒▓██ ▒ ██▒▓██░  ██▒▒██    ▒ ▒██▀ ▀█  ▒████▄     ██ ▀█   █
+▒██▒ ▄██▓██  ▒██░▓██ ░▄█ ▒▓██░ ██▓▒░ ▓██▄   ▒▓█    ▄ ▒██  ▀█▄  ▓██  ▀█ ██▒
+▒██░█▀  ▓▓█  ░██░▒██▀▀█▄  ▒██▄█▓▒ ▒  ▒   ██▒▒▓▓▄ ▄██▒░██▄▄▄▄██ ▓██▒  ▐▌██▒
+░▓█  ▀█▓▒▒█████▓ ░██▓ ▒██▒▒██▒ ░  ░▒██████▒▒▒ ▓███▀ ░ ▓█   ▓██▒▒██░   ▓██░
+░▒▓███▀▒░▒▓▒ ▒ ▒ ░ ▒▓ ░▒▓░▒▓▒░ ░  ░▒ ▒▓▒ ▒ ░░ ░▒ ▒  ░ ▒▒   ▓▒█░░ ▒░   ▒ ▒
+▒░▒   ░ ░░▒░ ░ ░   ░▒ ░ ▒░░▒ ░     ░ ░▒  ░ ░  ░  ▒     ▒   ▒▒ ░░ ░░   ░ ▒░
+ ░    ░  ░░░ ░ ░   ░░   ░ ░░       ░  ░  ░  ░          ░   ▒      ░   ░ ░
+ ░         ░        ░                    ░  ░ ░            ░  ░         ░
+      ░                                     ░
+"""
+    
+    # ANSI color codes for a cool effect
+    colors = [
+        "\033[1;31m",  # Red
+        "\033[1;32m",  # Green
+        "\033[1;34m",  # Blue
+        "\033[1;35m",  # Purple
+        "\033[1;36m"   # Cyan
+    ]
+    
+    # Choose a random color
+    color = random.choice(colors)
+    reset = "\033[0m"
+    
+    print(f"{color}{banner}{reset}")
+    print(f"{color}Automated Web Application Security Testing with Burp Suite{reset}")
+    print(f"{color}v1.0 - https://github.com/sherlock-ohm/burpscan{reset}")
+    print("\n")
 
 # ----------------------------
 # Argument Parsing
@@ -507,24 +545,29 @@ def send_burp_scan_for_subdomain(subdomain, urls, api_url, debug=False, hailmary
             save_urls_to_file(clean_urls, f"http://{subdomain}")
             return False
 
+def process_single_subdomain(subdomain, urls, api_url, debug=False, hailmary=False):
+    """Process a single subdomain immediately after confirmation"""
+    print(f"\n Subdomain '{subdomain}' has {len(urls)} URLs")
+    
+    # Ask for confirmation (auto-yes in hailmary mode)
+    choice = prompt_user(f"Scan {len(urls)} URLs for '{subdomain}'? [y/N]: ", hailmary)
+    
+    if choice == 'y':
+        print(f" Sending {len(urls)} URLs for subdomain '{subdomain}' to Burp Suite...")
+        if send_burp_scan_for_subdomain(subdomain, urls, api_url, debug, hailmary):
+            return True
+    return False
+
 def process_subdomain_groups(url_groups, api_url, debug=False, hailmary=False):
     """Process each subdomain group with a separate scan"""
     total_groups = len(url_groups)
     successful_groups = 0
     
-    print(f"\n🔍 Processing {total_groups} different subdomains/hosts for individual scans")
+    print(f"\n Processing {total_groups} different subdomains/hosts for individual scans")
     
     for subdomain, urls in url_groups.items():
-        # For each subdomain, ask for confirmation and create a dedicated scan
-        print(f"\n📋 Subdomain '{subdomain}' has {len(urls)} URLs")
-        
-        # Ask for confirmation (auto-yes in hailmary mode)
-        choice = prompt_user(f"Scan {len(urls)} URLs for '{subdomain}'? [y/N]: ", hailmary)
-        
-        if choice == 'y':
-            print(f"🔍 Sending {len(urls)} URLs for subdomain '{subdomain}' to Burp Suite...")
-            if send_burp_scan_for_subdomain(subdomain, urls, api_url, debug, hailmary):
-                successful_groups += 1
+        if process_single_subdomain(subdomain, urls, api_url, debug, hailmary):
+            successful_groups += 1
     
     print(f"\n✅ Completed processing {successful_groups}/{total_groups} subdomain scans")
     return successful_groups > 0
@@ -597,21 +640,24 @@ def parse_plain_text_lines(lines, debug=False):
 # ----------------------------
 # Main
 # ----------------------------
-
 def main():
+    # Display the fancy banner
+    display_banner()
+    
     args = parse_arguments()
     api_key = args.api_key or ""
     api_url = f"http://localhost:1337/{api_key}/v0.1/scan" if api_key else "http://localhost:1337/v0.1/scan"
     hailmary = args.hailmary
     use_katana = args.katana
 
+
     if hailmary:
         print("⚠️ HailMary mode activated - automatically answering 'yes' to all prompts")
     
     if use_katana:
-        print("🕸️ Katana mode activated - will run katana crawler against simple endpoints")
+        print("️ Katana mode activated - will run katana crawler against simple endpoints")
     else:
-        print("🔍 Direct mode - sending httpx output directly to Burp Suite (no katana crawling)")
+        print(" Direct mode - sending httpx output directly to Burp Suite (no katana crawling)")
 
     raw_targets = []
 
@@ -667,7 +713,7 @@ def main():
                     sys.exit(1)
                 
                 # Continue with direct mode (disable katana)
-                print("\n🔄 Continuing in direct mode (--katana disabled)")
+                print("\n Continuing in direct mode (--katana disabled)")
                 use_katana = False
         else:
             # Try to handle it as a URL missing the protocol
@@ -696,7 +742,7 @@ def main():
                         sys.exit(1)
                     
                     # Continue with direct mode (disable katana)
-                    print("\n🔄 Continuing in direct mode (--katana disabled)")
+                    print("\n Continuing in direct mode (--katana disabled)")
                     use_katana = False
             else:
                 print("❌ Input is neither a valid file nor a recognised target format.")
@@ -745,30 +791,30 @@ def main():
                 sys.exit(1)
             
             # Continue with direct mode (disable katana)
-            print("\n🔄 Continuing in direct mode (--katana disabled)")
+            print("\n Continuing in direct mode (--katana disabled)")
             use_katana = False
 
     if not raw_targets:
-        print("🚫 No valid targets found.")
+        print(" No valid targets found.")
         sys.exit(1)
 
-    print("🔍 Running httpx to verify live services...")
+    print(" Running httpx to verify live services...")
     httpx_targets = run_httpx_filter(raw_targets, args.debug)
 
     if not httpx_targets:
-        print("🚫 No live HTTP/S services detected.")
+        print(" No live HTTP/S services detected.")
         sys.exit(1)
 
-    print(f"\n📋 {len(httpx_targets)} valid targets found.\n")
+    print(f"\n {len(httpx_targets)} valid targets found.\n")
     
     # Get all clean URLs from httpx
     clean_httpx_urls = sanitize_urls(httpx_targets, args.debug)
     
     # Process targets according to the mode (direct or katana)
     if not use_katana:
-        # Direct mode - group all URLs by subdomain and send directly
+        # Direct mode - group all URLs by subdomain and process each immediately
         url_groups = group_urls_by_subdomain(clean_httpx_urls, args.debug)
-        print(f"\n🔍 Found {len(url_groups)} distinct hostnames in httpx output")
+        print(f"\n Found {len(url_groups)} distinct hostnames in httpx output")
         
         # Process each subdomain group
         process_subdomain_groups(url_groups, api_url, args.debug, hailmary)
@@ -777,25 +823,26 @@ def main():
         simple_targets, _ = group_urls_by_domain(httpx_targets, args.debug)
         
         # Only process simple targets with katana
-        print(f"\n🔍 Found {len(simple_targets)} simple endpoints (without paths/parameters)")
-        print(f"🕸️ Running katana on {len(simple_targets)} simple endpoints...")
+        print(f"\n Found {len(simple_targets)} simple endpoints (without paths/parameters)")
+        print(f"️ Running katana on {len(simple_targets)} simple endpoints...")
         
         for target in simple_targets:
             # Make sure the target URL is sanitized
             target = sanitize_url(target, args.debug)
             
             # When --katana is specified, we automatically run katana without asking
-            print(f"\n🕸️ Running katana on {target}...")
+            print(f"\n️ Running katana on {target}...")
             katana_urls = run_katana(target, args.debug)
             
             if not katana_urls:
                 print(f"⚠️ Katana found 0 URLs for {target}")
                 # Still scan the original URL
                 single_url_group = {urlparse(target).netloc: [target]}
-                process_subdomain_groups(single_url_group, api_url, args.debug, hailmary)
+                # Process this single target immediately
+                process_single_subdomain(urlparse(target).netloc, [target], api_url, args.debug, hailmary)
                 continue
             
-            print(f"\n📋 Katana found {len(katana_urls)} URLs for {target}")
+            print(f"\n Katana found {len(katana_urls)} URLs for {target}")
             
             # Make sure to include the original target URL
             all_urls = [target] + katana_urls
@@ -804,10 +851,11 @@ def main():
             
             # Group the katana results by subdomain for separate scans
             katana_subdomain_groups = group_urls_by_subdomain(all_urls, args.debug)
-            print(f"\n🔍 Katana found URLs for {len(katana_subdomain_groups)} different subdomains/hosts")
+            print(f"\n Katana found URLs for {len(katana_subdomain_groups)} different subdomains/hosts")
             
-            # Process each subdomain group separately
-            process_subdomain_groups(katana_subdomain_groups, api_url, args.debug, hailmary)
+            # Process each subdomain immediately after confirmation
+            for subdomain, urls in katana_subdomain_groups.items():
+                process_single_subdomain(subdomain, urls, api_url, args.debug, hailmary)
 
 if __name__ == "__main__":
     main()
